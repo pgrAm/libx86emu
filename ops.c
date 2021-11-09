@@ -84,6 +84,7 @@ static u32 (*op_A_long[8])(x86emu_t *emu, u32 d, u32 s) = {
   add_long, or_long, adc_long, sbb_long, and_long, sub_long, xor_long, cmp_long
 };
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 static void decode_op_A(x86emu_t *emu, int type)
 {
   switch(type) {
@@ -113,7 +114,7 @@ static void decode_op_A(x86emu_t *emu, int type)
       break;
   }
 }
-
+#endif
 
 static u8 (*op_B_byte[8])(x86emu_t *emu, u8 d, u8 s) = {
   rol_byte, ror_byte, rcl_byte, rcr_byte, shl_byte, shr_byte, shl_byte, sar_byte
@@ -127,6 +128,7 @@ static u32 (*op_B_long[8])(x86emu_t *emu, u32 s, u8 d) = {
   rol_long, ror_long, rcl_long, rcr_long, shl_long, shr_long, shl_long, sar_long
 };
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 static void decode_op_B(x86emu_t *emu, int type)
 {
   switch(type) {
@@ -211,7 +213,7 @@ void decode_cond(x86emu_t *emu, int type)
       break;
   }
 }
-
+#endif
 
 /****************************************************************************
 PARAMETERS:
@@ -238,8 +240,9 @@ static void x86emuOp_op_A_byte_RM_R(x86emu_t *emu, u8 op1)
   u32 addr;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
-
+#endif
   fetch_decode_modrm(emu, &mod, &rh, &rl);
   if(mod == 3) {
     dst = decode_rm_byte_register(emu, rl);
@@ -269,8 +272,9 @@ static void x86emuOp_op_A_word_RM_R(x86emu_t *emu, u8 op1)
   u16 *src16, *dst16;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
-
+#endif
   fetch_decode_modrm(emu, &mod, &rh, &rl);
   if(mod == 3) {
     if(MODE_DATA32) {
@@ -316,8 +320,9 @@ static void x86emuOp_op_A_byte_R_RM(x86emu_t *emu, u8 op1)
   u32 addr;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
-
+#endif
   fetch_decode_modrm(emu, &mod, &rh, &rl);
   if(mod == 3) {
     dst = decode_rm_byte_register(emu, rh);
@@ -346,8 +351,9 @@ static void x86emuOp_op_A_word_R_RM(x86emu_t *emu, u8 op1)
   u16 *src16, *dst16;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
-
+#endif
   fetch_decode_modrm(emu, &mod, &rh, &rl);
   if(mod == 3) {
     if(MODE_DATA32) {
@@ -392,9 +398,10 @@ static void x86emuOp_op_A_byte_AL_IMM(x86emu_t *emu, u8 op1)
   u8 val;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
   OP_DECODE("al,");
-
+#endif
   val = fetch_byte(emu);
   DECODE_HEX2(val);
   emu->x86.R_AL = (*op_A_byte[type])(emu, emu->x86.R_AL, val);
@@ -411,8 +418,9 @@ static void x86emuOp_op_A_word_AX_IMM(x86emu_t *emu, u8 op1)
   u32 val;
 
   type = op1 >> 3;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, type);
-
+#endif
   if(MODE_DATA32) {
     OP_DECODE("eax,");
     val = fetch_long(emu);
@@ -1522,8 +1530,10 @@ static void x86emuOp_jump_short_cc(x86emu_t *emu, u8 op1)
   u32 eip;
   unsigned type = op1 & 0xf;
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   OP_DECODE("j");
   decode_cond(emu, type);
+#endif
 
   ofs = (s8) fetch_byte(emu);
   eip = emu->x86.R_EIP + ofs;
@@ -1545,8 +1555,9 @@ static void x86emuOp_opc80_byte_RM_IMM(x86emu_t *emu, u8 op1)
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, rh);
-
+#endif
   if(mod == 3) {
     reg8 = decode_rm_byte_register(emu, rl);
     OP_DECODE(",");
@@ -1580,8 +1591,9 @@ static void x86emuOp_opc81_word_RM_IMM(x86emu_t *emu, u8 op1)
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, rh);
-
+#endif
   if(mod == 3) {
     if(MODE_DATA32) {
       reg32 = decode_rm_long_register(emu, rl);
@@ -1639,9 +1651,9 @@ static void x86emuOp_opc83_word_RM_IMM(x86emu_t *emu, u8 op1)
   u32 *reg32, val, imm, addr;
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
-
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_A(emu, rh);
-
+#endif
   if(mod == 3) {
     if(MODE_DATA32) {
       reg32 = decode_rm_long_register(emu, rl);
@@ -3554,9 +3566,9 @@ static void x86emuOp_opcC0_byte_RM_MEM(x86emu_t *emu, u8 op1)
   u32 addr;
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
-
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   if(mod == 3) {
     reg8 = decode_rm_byte_register(emu, rl);
     OP_DECODE(",");
@@ -3590,9 +3602,9 @@ static void x86emuOp_opcC1_word_RM_MEM(x86emu_t *emu, u8 op1)
   u32 *reg32, val, addr;
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
-
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   if(mod == 3) {
     if(MODE_DATA32) {
       reg32 = decode_rm_long_register(emu, rl);
@@ -4063,8 +4075,9 @@ static void x86emuOp_opcD0_byte_RM_1(x86emu_t *emu, u8 op1)
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   if(mod == 3) {
     reg8 = decode_rm_byte_register(emu, rl);
     OP_DECODE(",1");
@@ -4094,8 +4107,9 @@ static void x86emuOp_opcD1_word_RM_1(x86emu_t *emu, u8 op1)
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   if(mod == 3) {
     if(MODE_DATA32) {
       reg32 = decode_rm_long_register(emu, rl);
@@ -4142,9 +4156,9 @@ static void x86emuOp_opcD2_byte_RM_CL(x86emu_t *emu, u8 op1)
   u32 addr;
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
-
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   imm = emu->x86.R_CL;
 
   if(mod == 3) {
@@ -4176,9 +4190,9 @@ static void x86emuOp_opcD3_word_RM_CL(x86emu_t *emu, u8 op1)
   u32 *reg32, val, addr;
 
   fetch_decode_modrm(emu, &mod, &rh, &rl);
-
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   decode_op_B(emu, rh);
-
+#endif
   imm = emu->x86.R_CL;
 
   if(mod == 3) {
@@ -4574,11 +4588,12 @@ static void x86emuOp_jump_byte_IMM(x86emu_t *emu, u8 op1)
     DECODE_HEX_ADDR(eip);
   }
 
-  // we had a prefix: special debug instruction
+#ifdef X86EMU_ENABLE_LOGGING  // we had a prefix: special debug instruction
   if((emu->log.trace & X86EMU_TRACE_DEBUG) && emu->x86.R_EIP - emu->x86.saved_eip == 3 && ofs >= 1) {
     emu->x86.debug_start = emu->x86.R_CS_BASE + emu->x86.R_EIP;
     emu->x86.debug_len = ofs;
   }
+#endif
 
   emu->x86.R_EIP = eip;
 }

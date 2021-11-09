@@ -43,8 +43,10 @@
 
 static void handle_interrupt(x86emu_t *emu);
 static void generate_int(x86emu_t *emu, u8 nr, unsigned type, unsigned errcode);
+#ifdef X86EMU_ENABLE_LOGGING
 static void log_regs(x86emu_t *emu);
 static void log_code(x86emu_t *emu);
+#endif
 static void check_data_access(x86emu_t *emu, sel_t *seg, u32 ofs, u32 size);
 static unsigned decode_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type);
 static unsigned emu_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type);
@@ -60,7 +62,9 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
 {
   u8 op1, u_m1;
   s32 ofs32;
+#ifdef X86EMU_ENABLE_LOGGING
   char **p;
+#endif
   unsigned u, rs = 0;
   time_t t0;
   int has_prefix;
@@ -68,7 +72,9 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
   u64 tsc_ofs;
 #endif
 
+#ifdef X86EMU_ENABLE_LOGGING
   p = &emu->log.ptr;
+#endif
 
   t0 = time(NULL);
 
@@ -83,7 +89,9 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
 #endif
 
   for(;;) {
+#ifdef X86EMU_ENABLE_DISASSEMBLY
     *(emu->x86.disasm_ptr = emu->x86.disasm_buf) = 0;
+#endif
 
     emu->x86.instr_len = 0;
 
@@ -102,7 +110,9 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
     emu->x86.saved_cs = emu->x86.R_CS;
     emu->x86.saved_eip = emu->x86.R_EIP;
 
+#ifdef X86EMU_ENABLE_LOGGING
     log_regs(emu);
+#endif
 
     if(
       (flags & X86EMU_RUN_MAX_INSTR) &&
@@ -236,7 +246,9 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
 
     (*x86emu_optab[op1])(emu, op1);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
     *emu->x86.disasm_ptr = 0;
+#endif
 
     handle_interrupt(emu);
 
@@ -245,18 +257,20 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
     emu->x86.R_REAL_TSC = tsc() - tsc_ofs;
 #endif
 
+#ifdef X86EMU_ENABLE_LOGGING
     log_code(emu);
 
     if(emu->x86.debug_len) {
       emu_process_debug(emu, emu->x86.debug_start, emu->x86.debug_len);
       emu->x86.debug_len = emu->x86.debug_start = 0;
     }
-
+#endif
     emu->x86.R_TSC++;	// time stamp counter
 
     if(MODE_HALTED) break;
   }
 
+#ifdef X86EMU_ENABLE_LOGGING
   if(*p) {
     if((rs & X86EMU_RUN_TIMEOUT)) {
       LOG_STR("* timeout\n");
@@ -275,6 +289,7 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
     }
     **p = 0;
   }
+#endif
 
 #if WITH_TSC
   emu->x86.R_REAL_TSC = tsc() - tsc_ofs;
@@ -298,10 +313,13 @@ Handles any pending asychronous interrupts.
 ****************************************************************************/
 void handle_interrupt(x86emu_t *emu)
 {
+#ifdef X86EMU_ENABLE_LOGGING
   char **p = &emu->log.ptr;
   unsigned lf;
+#endif
 
   if(emu->x86.intr_type) {
+#ifdef X86EMU_ENABLE_LOGGING
     if((emu->log.trace & X86EMU_TRACE_INTS) && *p) {
       lf = LOG_FREE(emu);
       if(lf < 128) lf = x86emu_clear_log(emu, 1);
@@ -317,7 +335,7 @@ void handle_interrupt(x86emu_t *emu)
         **p = 0;
       }
     }
-
+#endif
     generate_int(emu, emu->x86.intr_nr, emu->x86.intr_type, emu->x86.intr_errcode);
   }
 
@@ -1015,6 +1033,7 @@ sel_t *decode_rm_seg_register(x86emu_t *emu, int reg)
   return emu->x86.seg + reg;
 }
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 
 void decode_hex(x86emu_t *emu, char **p, u32 ofs)
 {
@@ -1159,6 +1178,7 @@ void decode_hex8s(x86emu_t *emu, char **p, s32 ofs)
   decode_hex8(emu, p, ofs);
 }
 
+#endif
 
 /****************************************************************************
 PARAMETERS:
@@ -1706,17 +1726,19 @@ u32 decode_sib_address(x86emu_t *emu, int sib, int mod)
 
   scale = (sib >> 6) & 0x03;
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   if(((sib >> 3) & 0x07) != 4) {
     if(scale) {
       OP_DECODE("*");
       *emu->x86.disasm_ptr++ = '0' + (1 << scale);
     }
   }
+#endif
 
   return base + (i << scale);
 }
 
-
+#ifdef X86EMU_ENABLE_LOGGING
 void log_code(x86emu_t *emu)
 {
   unsigned u, lf;
@@ -1759,7 +1781,6 @@ void log_code(x86emu_t *emu)
 
   **p = 0;
 }
-
 
 void log_regs(x86emu_t *emu)
 {
@@ -1839,13 +1860,16 @@ void log_regs(x86emu_t *emu)
 
   **p = 0;
 }
-
+#endif
 
 void check_data_access(x86emu_t *emu, sel_t *seg, u32 ofs, u32 size)
 {
-  char **p = &emu->log.ptr;
-  static char seg_name[7] = "ecsdfg?";
+
+#ifdef X86EMU_ENABLE_LOGGING
   unsigned idx = seg - emu->x86.seg, lf;
+  char** p = &emu->log.ptr;
+
+  static char seg_name[7] = "ecsdfg?";
 
   if((emu->log.trace & X86EMU_TRACE_ACC) && *p) {
     lf = LOG_FREE(emu);
@@ -1872,6 +1896,7 @@ void check_data_access(x86emu_t *emu, sel_t *seg, u32 ofs, u32 size)
       **p = 0;
     }
   }
+#endif
 
   if(ofs + size - 1 > seg->limit) {
     INTR_RAISE_GP(emu, seg->sel);
@@ -1883,8 +1908,11 @@ void check_data_access(x86emu_t *emu, sel_t *seg, u32 ofs, u32 size)
 
 void decode_descriptor(x86emu_t *emu, descr_t *d, u32 dl, u32 dh)
 {
+#ifdef X86EMU_ENABLE_LOGGING
   char **p = &emu->log.ptr;
-  unsigned lf, acc;
+  unsigned lf;
+#endif
+  unsigned acc;
 
   memset(d, 0, sizeof *d);
 
@@ -1956,6 +1984,7 @@ void decode_descriptor(x86emu_t *emu, descr_t *d, u32 dl, u32 dh)
     }
   }
 
+#ifdef X86EMU_ENABLE_LOGGING
   if((emu->log.trace & X86EMU_TRACE_ACC) && *p) {
     lf = LOG_FREE(emu);
     if(lf < 512) lf = x86emu_clear_log(emu, 1);
@@ -2003,6 +2032,7 @@ void decode_descriptor(x86emu_t *emu, descr_t *d, u32 dl, u32 dh)
       **p = 0;
     }
   }
+  #endif
 }
 
 
@@ -2101,8 +2131,9 @@ void generate_int(x86emu_t *emu, u8 nr, unsigned type, unsigned errcode)
   u32 cs, eip, new_cs, new_eip;
   int i;
 
+#ifdef X86EMU_ENABLE_LOGGING
   emu->x86.intr_stats[nr]++;
-
+#endif
   i = emu->intr ? (*emu->intr)(emu, nr, type) : 0;
 
   if(!i) {
@@ -2144,13 +2175,16 @@ void generate_int(x86emu_t *emu, u8 nr, unsigned type, unsigned errcode)
 
 unsigned decode_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
 {
-  unsigned err, bits = type & 0xff, lf;
+  unsigned err;
+#ifdef X86EMU_ENABLE_LOGGING
+  unsigned bits = type & 0xff, lf;
   char **p = &emu->log.ptr;
+#endif
 
   err = emu->memio(emu, addr, val, type);
 
   type &= ~0xff;
-
+#ifdef X86EMU_ENABLE_LOGGING
   if(!*p || !((emu->log.trace & X86EMU_TRACE_DATA) || (emu->log.trace & X86EMU_TRACE_IO))) return err;
 
   if(
@@ -2161,7 +2195,9 @@ unsigned decode_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
   lf = LOG_FREE(emu);
   if(lf < 1024) lf = x86emu_clear_log(emu, 1);
   if(lf < 1024) return err;
+#endif
 
+#ifdef X86EMU_ENABLE_LOGGING
   switch(type) {
     case X86EMU_MEMIO_R:
       LOG_STR("r [");
@@ -2213,6 +2249,7 @@ unsigned decode_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
 
   LOG_STR("\n");
   **p = 0;
+#endif
 
   return err;
 }
@@ -2220,13 +2257,16 @@ unsigned decode_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
 
 unsigned emu_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
 {
-  unsigned err, bits = type & 0xff, lf;
-  char **p = &emu->log.ptr;
-
+    unsigned err;
+#ifdef X86EMU_ENABLE_LOGGING
+    unsigned bits = type & 0xff, lf;
+    char **p = &emu->log.ptr;
+#endif
   err = emu->memio(emu, addr, val, type);
 
   type &= ~0xff;
 
+#ifdef X86EMU_ENABLE_LOGGING
   if(!*p || !((emu->log.trace & X86EMU_TRACE_DATA) || (emu->log.trace & X86EMU_TRACE_IO))) return err;
 
   if(
@@ -2289,11 +2329,12 @@ unsigned emu_memio(x86emu_t *emu, u32 addr, u32 *val, unsigned type)
 
   LOG_STR("\n");
   **p = 0;
+#endif
 
   return err;
 }
 
-
+#ifdef X86EMU_ENABLE_LOGGING
 void emu_process_debug(x86emu_t *emu, unsigned start, unsigned len)
 {
   unsigned lf, type, u;
@@ -2348,5 +2389,6 @@ void emu_process_debug(x86emu_t *emu, unsigned start, unsigned len)
 
   **p = 0;
 }
+#endif
 
 

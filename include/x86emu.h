@@ -438,16 +438,20 @@ typedef struct {
   char decode_seg[4];
   unsigned char instr_buf[32];	/* instruction bytes */
   unsigned instr_len;		/* bytes in instr_buf */
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   char disasm_buf[256];
   char *disasm_ptr;
+#endif
   u8 intr_nr;
   unsigned intr_type;
   unsigned intr_errcode;
+#ifdef X86EMU_ENABLE_LOGGING
   unsigned intr_stats[0x100];
   unsigned debug_start, debug_len;
+#endif
 } x86emu_regs_t;
 
-
+#ifdef X86EMU_ENABLE_LOGGING
 #define X86EMU_TRACE_REGS	(1 << 0)
 #define X86EMU_TRACE_CODE	(1 << 1)
 #define X86EMU_TRACE_DATA	(1 << 2)
@@ -468,6 +472,7 @@ typedef struct {
 #define X86EMU_DUMP_INTS	(1 << 7)
 #define X86EMU_DUMP_TIME	(1 << 8)
 #define X86EMU_DUMP_DEFAULT	(X86EMU_DUMP_REGS | X86EMU_DUMP_INV_MEM | X86EMU_DUMP_ATTR | X86EMU_DUMP_ASCII | X86EMU_DUMP_IO | X86EMU_DUMP_INTS | X86EMU_DUMP_TIME)
+#endif
 
 #define X86EMU_PERM_R		(1 << 0)
 #define X86EMU_PERM_W		(1 << 1)
@@ -526,11 +531,16 @@ typedef struct x86emu_s {
   x86emu_wrmsr_handler_t rdmsr;
   x86emu_mem_t *mem;
   struct {
+#ifdef X86EMU_USE_IO_MAP
     unsigned char *map;
+#endif
+#ifdef X86EMU_ENABLE_LOGGING
     unsigned *stats_i, *stats_o;
+#endif
     unsigned iopl_needed:1;
     unsigned iopl_ok:1;
   } io;
+#ifdef X86EMU_ENABLE_LOGGING
   struct {
     x86emu_flush_func_t flush;
     unsigned size;
@@ -538,6 +548,7 @@ typedef struct x86emu_s {
     char *ptr;
     unsigned trace;		/* trace flags: X86EMU_TRACE_* */
   } log;
+#endif
   unsigned timeout;
   u64 max_instr;
   union {
@@ -558,10 +569,12 @@ void x86emu_reset(x86emu_t *emu);
 unsigned x86emu_run(x86emu_t *emu, unsigned flags) __attribute__ ((nonnull (1)));
 void x86emu_stop(x86emu_t *emu);
 
+#ifdef X86EMU_ENABLE_LOGGING
 void x86emu_set_log(x86emu_t *emu, unsigned buffer_size, x86emu_flush_func_t flush);
 unsigned x86emu_clear_log(x86emu_t *emu, int flush) __attribute__ ((nonnull (1)));
 void x86emu_log(x86emu_t *emu, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 void x86emu_dump(x86emu_t *emu, int flags);
+#endif
 
 void x86emu_set_perm(x86emu_t *emu, unsigned start, unsigned end, unsigned perm);
 void x86emu_set_io_perm(x86emu_t *emu, unsigned start, unsigned end, unsigned perm);

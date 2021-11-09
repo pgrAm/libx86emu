@@ -59,11 +59,16 @@ API_SYM x86emu_t *x86emu_new(unsigned def_mem_perm, unsigned def_io_perm)
 
   emu->mem = emu_mem_new(def_mem_perm);
 
+#ifdef X86EMU_USE_IO_MAP
   emu->io.map =  calloc(X86EMU_IO_PORTS, sizeof *emu->io.map);
+#endif
+#ifdef X86EMU_ENABLE_LOGGING
   emu->io.stats_i =  calloc(X86EMU_IO_PORTS, sizeof *emu->io.stats_i);
   emu->io.stats_o =  calloc(X86EMU_IO_PORTS, sizeof *emu->io.stats_o);
-
+#endif
+#ifdef X86EMU_USE_IO_MAP
   if(def_io_perm) x86emu_set_io_perm(emu, 0, X86EMU_IO_PORTS - 1, def_io_perm);
+#endif
 
   x86emu_set_memio_handler(emu, vm_memio);
   x86emu_set_rdmsr_handler(emu, x86emu_rdmsr);
@@ -79,13 +84,16 @@ API_SYM x86emu_t *x86emu_done(x86emu_t *emu)
 {
   if(emu) {
     emu_mem_free(emu->mem);
-
+#ifdef X86EMU_ENABLE_LOGGING
     free(emu->log.buf);
-
+#endif
+#ifdef X86EMU_USE_IO_MAP
     free(emu->io.map);
+#endif
+#ifdef X86EMU_ENABLE_LOGGING
     free(emu->io.stats_i);
     free(emu->io.stats_o);
-
+#endif
     free(emu->x86.msr);
     free(emu->x86.msr_perm);
 
@@ -106,6 +114,7 @@ API_SYM x86emu_t *x86emu_clone(x86emu_t *emu)
 
   new_emu->mem = emu_mem_clone(emu->mem);
 
+#ifdef X86EMU_ENABLE_LOGGING
   if(emu->log.buf && emu->log.ptr) {
     new_emu->log.buf = malloc(emu->log.size);
     // copy only used log space
@@ -114,10 +123,14 @@ API_SYM x86emu_t *x86emu_clone(x86emu_t *emu)
       memcpy(new_emu->log.buf, emu->log.buf, emu->log.ptr - emu->log.buf);
     }
   }
-
+#endif
+#ifdef X86EMU_USE_IO_MAP
   new_emu->io.map = mem_dup(emu->io.map, X86EMU_IO_PORTS * sizeof *emu->io.map);
+#endif
+#ifdef X86EMU_ENABLE_LOGGING
   new_emu->io.stats_i = mem_dup(emu->io.stats_i, X86EMU_IO_PORTS * sizeof *emu->io.stats_i);
   new_emu->io.stats_o = mem_dup(emu->io.stats_o, X86EMU_IO_PORTS * sizeof *emu->io.stats_o);
+#endif
   new_emu->x86.msr = mem_dup(emu->x86.msr, X86EMU_MSRS * sizeof *emu->x86.msr);
   new_emu->x86.msr_perm = mem_dup(emu->x86.msr_perm, X86EMU_MSRS * sizeof *emu->x86.msr_perm);
 
@@ -304,6 +317,7 @@ API_SYM void x86emu_write_dword(x86emu_t *emu, unsigned addr, unsigned val)
   if(emu) emu->memio(emu, addr, &val32, X86EMU_MEMIO_W | X86EMU_MEMIO_32);
 }
 
+#ifdef X86EMU_ENABLE_LOGGING
 
 API_SYM void x86emu_set_log(x86emu_t *emu, unsigned buffer_size, x86emu_flush_func_t flush)
 {
@@ -424,7 +438,6 @@ static void dump_data(x86emu_t *emu, unsigned char *data, unsigned char *attr, c
   while(str_data > sd && str_data[-1] == ' ') *--str_data = 0;
   while(str_attr > sa && str_attr[-1] == ' ') *--str_attr = 0;
 }
-
 
 API_SYM void x86emu_dump(x86emu_t *emu, int flags)
 {
@@ -618,4 +631,4 @@ API_SYM void x86emu_dump(x86emu_t *emu, int flags)
     x86emu_log(emu, "\n\n");
   }
 }
-
+#endif

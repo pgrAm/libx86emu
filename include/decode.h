@@ -42,6 +42,7 @@
 
 /* Instruction Decoding */
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 #define OP_DECODE(a) \
   memcpy((emu)->x86.disasm_ptr, a, sizeof a - 1), \
   (emu)->x86.disasm_ptr += sizeof a - 1
@@ -58,6 +59,18 @@
 #define DECODE_HEX4S(ofs) decode_hex4s((emu), &(emu)->x86.disasm_ptr, ofs)
 #define DECODE_HEX8S(ofs) decode_hex8s((emu), &(emu)->x86.disasm_ptr, ofs)
 #define DECODE_HEX_ADDR(ofs) decode_hex_addr((emu), &(emu)->x86.disasm_ptr, ofs)
+#else
+#define OP_DECODE(a)
+#define SEGPREF_DECODE
+#define DECODE_HEX1(ofs)
+#define DECODE_HEX2(ofs)
+#define DECODE_HEX4(ofs)
+#define DECODE_HEX8(ofs)
+#define DECODE_HEX2S(ofs)
+#define DECODE_HEX4S(ofs)
+#define DECODE_HEX8S(ofs)
+#define DECODE_HEX_ADDR(ofs)
+#endif
 
 /*-------------------------- Function Prototypes --------------------------*/
 
@@ -100,6 +113,7 @@ u32 decode_rm10_address(x86emu_t *emu, int rm);
 u32 decode_sib_address(x86emu_t *emu, int sib, int mod);
 u32 decode_rm_address(x86emu_t *emu, int mod, int rl);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 void decode_hex(x86emu_t *emu, char **p, u32 ofs);
 void decode_hex1(x86emu_t *emu, char **p, u32 ofs);
 void decode_hex2(x86emu_t *emu, char **p, u32 ofs);
@@ -110,6 +124,7 @@ void decode_hex_addr(x86emu_t *emu, char **p, u32 ofs);
 void decode_hex2s(x86emu_t *emu, char **p, s32 ofs);
 void decode_hex4s(x86emu_t *emu, char **p, s32 ofs);
 void decode_hex8s(x86emu_t *emu, char **p, s32 ofs);
+#endif
 
 void decode_descriptor(x86emu_t *emu, descr_t *d, u32 dl, u32 dh);
 

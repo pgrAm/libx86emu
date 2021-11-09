@@ -94,8 +94,12 @@
 
 extern u32 x86emu_parity_tab[8];
 
+#ifdef X86EMU_ENABLE_LOGGING
 #define LOG_STR(a) memcpy(*p, a, sizeof (a) - 1), *p += sizeof (a) - 1
 #define LOG_FREE(emu) ((emu)->log.size + (emu)->log.buf - (emu)->log.ptr)
+#else
+#define LOG_STR(a)
+#endif
 
 #if defined(__i386__) || defined (__x86_64__)
 #define WITH_TSC	1

@@ -171,6 +171,7 @@ API_SYM void x86emu_reset_access_stats(x86emu_t *emu)
   }
 }
 
+#ifdef X86EMU_USE_IO_MAP
 
 API_SYM void x86emu_set_io_perm(x86emu_t *emu, unsigned start, unsigned end, unsigned perm)
 {
@@ -193,6 +194,7 @@ API_SYM void x86emu_set_io_perm(x86emu_t *emu, unsigned start, unsigned end, uns
 #endif
 }
 
+#endif
 
 mem2_page_t *vm_get_page(x86emu_mem_t *mem, unsigned addr, int create)
 {
@@ -565,6 +567,7 @@ void vm_w_dword(x86emu_mem_t *mem, unsigned addr, unsigned val)
 
 unsigned vm_i_byte(x86emu_t *emu, unsigned addr)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
 
   addr &= 0xffff;
@@ -576,8 +579,9 @@ unsigned vm_i_byte(x86emu_t *emu, unsigned addr)
   ) {
     *perm |= X86EMU_ACC_R;
 
+#ifdef X86EMU_ENABLE_LOGGING
     emu->io.stats_i[addr]++;
-
+#endif
     return inb(addr);
   }
   else {
@@ -587,11 +591,15 @@ unsigned vm_i_byte(x86emu_t *emu, unsigned addr)
   emu->mem->invalid = 1;
 
   return 0xff;
+#else
+    return inb(addr);
+#endif
 }
 
 
 unsigned vm_i_word(x86emu_t *emu, unsigned addr)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
   unsigned val;
 
@@ -613,15 +621,18 @@ unsigned vm_i_word(x86emu_t *emu, unsigned addr)
   perm[0] |= X86EMU_ACC_R;
   perm[1] |= X86EMU_ACC_R;
 
+#ifdef X86EMU_ENABLE_LOGGING
   emu->io.stats_i[addr]++;
   emu->io.stats_i[addr + 1]++;
-
+#endif
+#endif
   return inw(addr);
 }
 
 
 unsigned vm_i_dword(x86emu_t *emu, unsigned addr)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
   unsigned val;
 
@@ -649,17 +660,20 @@ unsigned vm_i_dword(x86emu_t *emu, unsigned addr)
   perm[2] |= X86EMU_ACC_R;
   perm[3] |= X86EMU_ACC_R;
 
+#ifdef X86EMU_ENABLE_LOGGING
   emu->io.stats_i[addr]++;
   emu->io.stats_i[addr + 1]++;
   emu->io.stats_i[addr + 2]++;
   emu->io.stats_i[addr + 3]++;
-
+#endif
+#endif
   return inl(addr);
 }
 
 
 void vm_o_byte(x86emu_t *emu, unsigned addr, unsigned val)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
 
   addr &= 0xffff;
@@ -671,8 +685,9 @@ void vm_o_byte(x86emu_t *emu, unsigned addr, unsigned val)
   ) {
     *perm |= X86EMU_ACC_W;
 
+#ifdef X86EMU_ENABLE_LOGGING
     emu->io.stats_o[addr]++;
-
+#endif
     outb(val, addr);
   }
   else {
@@ -680,11 +695,15 @@ void vm_o_byte(x86emu_t *emu, unsigned addr, unsigned val)
 
     emu->mem->invalid = 1;
   }
+#else
+    outb(val, addr);
+#endif
 }
 
 
 void vm_o_word(x86emu_t *emu, unsigned addr, unsigned val)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
 
   addr &= 0xffff;
@@ -705,15 +724,18 @@ void vm_o_word(x86emu_t *emu, unsigned addr, unsigned val)
   perm[0] |= X86EMU_ACC_W;
   perm[1] |= X86EMU_ACC_W;
 
+#ifdef X86EMU_ENABLE_LOGGING
   emu->io.stats_o[addr]++;
   emu->io.stats_o[addr + 1]++;
-
+#endif
+#endif
   outw(val, addr);
 }
 
 
 void vm_o_dword(x86emu_t *emu, unsigned addr, unsigned val)
 {
+#ifdef X86EMU_USE_IO_MAP
   unsigned char *perm;
 
   addr &= 0xffff;
@@ -740,11 +762,13 @@ void vm_o_dword(x86emu_t *emu, unsigned addr, unsigned val)
   perm[2] |= X86EMU_ACC_W;
   perm[3] |= X86EMU_ACC_W;
 
+#ifdef X86EMU_ENABLE_LOGGING
   emu->io.stats_o[addr]++;
   emu->io.stats_o[addr + 1]++;
   emu->io.stats_o[addr + 2]++;
   emu->io.stats_o[addr + 3]++;
-
+#endif
+#endif
   outl(val, addr);
 }
 

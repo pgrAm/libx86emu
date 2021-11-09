@@ -870,9 +870,10 @@ static void x86emuOp2_long_jump(x86emu_t *emu, u8 op2)
   u32 eip;
   unsigned type = op2 & 0xf;
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   OP_DECODE("j");
   decode_cond(emu, type);
-
+#endif
   if(MODE_DATA32) {
     ofs = fetch_long(emu);
   }
@@ -901,9 +902,10 @@ static void x86emuOp2_set_byte(x86emu_t *emu, u8 op2)
   u8 *reg8;
   unsigned type = op2 & 0xf;
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   OP_DECODE("set");
   decode_cond(emu, type);
-
+#endif
   fetch_decode_modrm(emu, &mod, &rh, &rl);
 
   if(mod == 3) {

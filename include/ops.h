@@ -41,7 +41,8 @@
 extern void (*x86emu_optab[0x100])(x86emu_t *emu, u8 op1);
 extern void (*x86emu_optab2[0x100])(x86emu_t *emu, u8 op2);
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
 void decode_cond(x86emu_t *emu, int type);
-
+#endif
 
 #endif /* __X86EMU_OPS_H */

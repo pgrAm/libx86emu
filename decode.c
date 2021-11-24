@@ -140,34 +140,48 @@ API_SYM unsigned x86emu_run(x86emu_t *emu, unsigned flags)
       }
     }
 
+#ifdef X86EMU_ENABLE_DISASSEMBLY
     memcpy(emu->x86.decode_seg, "[", 1);
+#endif
 
     /* handle prefixes here */
     has_prefix = 1;
     while(has_prefix) {
       switch(op1 = fetch_byte(emu)) {
         case 0x26:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "es:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_ES_INDEX;
           break;
         case 0x2e:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "cs:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_CS_INDEX;
           break;
         case 0x36:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "ss:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_SS_INDEX;
           break;
         case 0x3e:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "ds:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_DS_INDEX;
           break;
         case 0x64:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "fs:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_FS_INDEX;
           break;
         case 0x65:
+#ifdef X86EMU_ENABLE_DISASSEMBLY
           memcpy(emu->x86.decode_seg, "gs:[", 4);
+#endif
           emu->x86.default_seg = emu->x86.seg + R_GS_INDEX;
           break;
         case 0x66:

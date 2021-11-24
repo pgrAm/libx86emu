@@ -435,7 +435,9 @@ typedef struct {
   sel_t *default_seg;
   u32 saved_eip;
   u16 saved_cs;
+#ifdef X86EMU_ENABLE_DISASSEMBLY
   char decode_seg[4];
+#endif
   unsigned char instr_buf[32];	/* instruction bytes */
   unsigned instr_len;		/* bytes in instr_buf */
 #ifdef X86EMU_ENABLE_DISASSEMBLY

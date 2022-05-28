@@ -280,6 +280,7 @@ static void x86emuOp2_wbinvd(x86emu_t *emu, u8 op2)
   OP_DECODE("wbinvd");
 }
 
+#ifdef X86EMU_ENABLE_SSE_EMULATION
 static void x86emuOp2_sse_enabled_check(x86emu_t *emu)
 {
   if (emu->x86.R_CR0 & CR0_EM || !(emu->x86.R_CR0 & CR0_MP))
@@ -483,6 +484,7 @@ static void x86emuOp2_SSEpackops(x86emu_t *emu, u8 op2)
     dst->reg[i] = arith.reg[i];
   }
 }
+#endif
 
 /****************************************************************************
 REMARKS:
@@ -798,6 +800,7 @@ static void x86emuOp2_conditional_move(x86emu_t *emu, u8 op2)
   }
 }
 
+#ifdef X86EMU_ENABLE_SSE_EMULATION
 /****************************************************************************
 REMARKS:
 Handles opcode 0x0f,0x54-57
@@ -859,6 +862,7 @@ static void x86emuOp2_SSElogicalops(x86emu_t *emu, u8 op2)
     }
   }
 }
+#endif
 
 /****************************************************************************
 REMARKS:
@@ -2066,7 +2070,7 @@ void (*x86emu_optab2[256])(x86emu_t *emu, u8) =
   /*  0x0d */ x86emuOp2_illegal_op,
   /*  0x0e */ x86emuOp2_illegal_op,
   /*  0x0f */ x86emuOp2_illegal_op,
-
+#ifdef X86EMU_ENABLE_SSE_EMULATION
   /*  0x10 */ x86emuOp2_SSEmovops,
   /*  0x11 */ x86emuOp2_SSEmovops,
   /*  0x12 */ x86emuOp2_SSEmovpackedops,
@@ -2075,6 +2079,16 @@ void (*x86emu_optab2[256])(x86emu_t *emu, u8) =
   /*  0x15 */ x86emuOp2_SSEpackops,
   /*  0x16 */ x86emuOp2_SSEmovpackedops,
   /*  0x17 */ x86emuOp2_SSEmovpackedops,
+ #else
+  /*  0x10 */ x86emuOp2_illegal_op,
+  /*  0x11 */ x86emuOp2_illegal_op,
+  /*  0x12 */ x86emuOp2_illegal_op,
+  /*  0x13 */ x86emuOp2_illegal_op,
+  /*  0x14 */ x86emuOp2_illegal_op,
+  /*  0x15 */ x86emuOp2_illegal_op,
+  /*  0x16 */ x86emuOp2_illegal_op,
+  /*  0x17 */ x86emuOp2_illegal_op,
+#endif
   /*  0x18 */ x86emuOp2_illegal_op,
   /*  0x19 */ x86emuOp2_illegal_op,
   /*  0x1a */ x86emuOp2_illegal_op,
@@ -2092,11 +2106,21 @@ void (*x86emu_optab2[256])(x86emu_t *emu, u8) =
   /*  0x25 */ x86emuOp2_illegal_op,
   /*  0x26 */ x86emuOp2_illegal_op,  /* mov treg,reg32 (ring 0 PM) */
   /*  0x27 */ x86emuOp2_illegal_op,
+
+#ifdef X86EMU_ENABLE_SSE_EMULATION
   /*  0x28 */ x86emuOp2_SSEmovops,
   /*  0x29 */ x86emuOp2_SSEmovops,
   /*  0x2a */ x86emuOp2_illegal_op,
   /*  0x2b */ x86emuOp2_SSEmovops,
   /*  0x2c */ x86emuOp2_SSEmovops,
+#else
+  /*  0x28 */ x86emuOp2_illegal_op,
+  /*  0x29 */ x86emuOp2_illegal_op,
+  /*  0x2a */ x86emuOp2_illegal_op,
+  /*  0x2b */ x86emuOp2_illegal_op,
+  /*  0x2c */ x86emuOp2_illegal_op,
+#endif
+
   /*  0x2d */ x86emuOp2_illegal_op,
   /*  0x2e */ x86emuOp2_illegal_op,
   /*  0x2f */ x86emuOp2_illegal_op,
@@ -2139,10 +2163,17 @@ void (*x86emu_optab2[256])(x86emu_t *emu, u8) =
   /*  0x51 */ x86emuOp2_illegal_op,
   /*  0x52 */ x86emuOp2_illegal_op,
   /*  0x53 */ x86emuOp2_illegal_op,
+#ifdef X86EMU_ENABLE_SSE_EMULATION
   /*  0x54 */ x86emuOp2_SSElogicalops,
   /*  0x55 */ x86emuOp2_SSElogicalops,
   /*  0x56 */ x86emuOp2_SSElogicalops,
   /*  0x57 */ x86emuOp2_SSElogicalops,
+#else
+  /*  0x54 */ x86emuOp2_illegal_op,
+  /*  0x55 */ x86emuOp2_illegal_op,
+  /*  0x56 */ x86emuOp2_illegal_op,
+  /*  0x57 */ x86emuOp2_illegal_op,
+ #endif
   /*  0x58 */ x86emuOp2_illegal_op,
   /*  0x59 */ x86emuOp2_illegal_op,
   /*  0x5a */ x86emuOp2_illegal_op,

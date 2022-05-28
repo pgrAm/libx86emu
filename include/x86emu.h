@@ -417,7 +417,9 @@ typedef void (* x86emu_flush_func_t)(struct x86emu_s *, char *buf, unsigned size
 typedef struct {
   struct i386_general_regs gen;
   struct i386_special_regs spc;
+#ifdef X86EMU_ENABLE_SSE_EMULATION
   struct i386_see_regs sse;
+#endif
   sel_t seg[8];
   sel_t ldt;
   sel_t tr;

@@ -949,6 +949,7 @@ u32* decode_rm_long_register(x86emu_t *emu, int reg)
   return NULL;                /* NOTREACHED OR REACHED ON ERROR */
 }
 
+#ifdef X86EMU_ENABLE_SSE_EMULATION
 /****************************************************************************
 PARAMETERS:
 reg	- SSE register to decode
@@ -998,7 +999,7 @@ I128_reg_t* decode_rm_sse_register(x86emu_t *emu, int reg)
 
   return NULL;                /* NOTREACHED OR REACHED ON ERROR */
 }
-
+#endif
 /****************************************************************************
 PARAMETERS:
 reg	- Register to decode

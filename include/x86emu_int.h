@@ -41,7 +41,9 @@
 #include <string.h>
 
 // exported symbol - all others are not exported by the library
-#define API_SYM			__attribute__((visibility("default")))
+//#define API_SYM			__attribute__((visibility("default")))
+
+#define API_SYM	
 
 #include "x86emu.h"
 #include "decode.h"

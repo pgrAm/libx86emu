@@ -106,7 +106,9 @@ u8* decode_rm_byte_register(x86emu_t *emu, int reg);
 u16* decode_rm_word_register(x86emu_t *emu, int reg);
 u32* decode_rm_long_register(x86emu_t *emu, int reg);
 sel_t *decode_rm_seg_register(x86emu_t *emu, int reg);
+#ifdef X86EMU_ENABLE_SSE_EMULATION
 I128_reg_t* decode_rm_sse_register(x86emu_t *emu, int reg);
+#endif
 u32 decode_rm00_address(x86emu_t *emu, int rm);
 u32 decode_rm01_address(x86emu_t *emu, int rm);
 u32 decode_rm10_address(x86emu_t *emu, int rm);
